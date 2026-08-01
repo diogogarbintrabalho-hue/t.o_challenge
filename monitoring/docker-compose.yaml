@@ -13,7 +13,7 @@ services:
       - monitoring_net
 
   zabbix-server:
-    image: zabbix/zabbix-server-pg:alpine-6.4-latest
+    image: zabbix/zabbix-server-pgsql:alpine-6.4-latest # <--- CORRIGIDO: adicionado 'sql'
     container_name: zabbix-server
     restart: always
     ports:
@@ -29,7 +29,7 @@ services:
       - monitoring_net
 
   zabbix-web:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest # <--- CORRIGIDO: adicionado 'sql' no final
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest # <--- Mantido corrigido com 'sql'
     container_name: zabbix-web
     restart: always
     ports:
