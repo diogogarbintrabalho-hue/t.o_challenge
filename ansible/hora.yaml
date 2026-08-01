@@ -1,5 +1,5 @@
 ---
-- name: Deploy da Primeira Aplicação (Python) com Restrição de IP e Cache Nginx
+- name: Deploy da Primeira Aplicação (Python) com Cache Nginx
   hosts: ec2
   become: true
 
@@ -22,14 +22,6 @@
           - git
           - nginx
         state: present
-
-    # Descobre o IP público da sua máquina local que executa o Ansible
-    - name: Obter IP público local
-      delegate_to: localhost
-      become: false
-      command: curl -s https://api.ipify.org
-      register: meu_ip_cmd
-      changed_when: false
 
     - name: Clonar ou atualizar o repositorio da aplicacao
       git:
@@ -70,25 +62,17 @@
         daemon_reload: yes
         enabled: yes
 
-    - name: Configurar Nginx com Restrição por IP e Cache de 1m na Aplicação Python
+    - name: Configurar Nginx com Cache de 1m na Aplicação Python
       copy:
         dest: /etc/nginx/sites-available/default
         content: |
-          # Zona de cache Nginx para a aplicação Python
           proxy_cache_path /var/cache/nginx/python levels=1:2 keys_zone=PYTHON_CACHE:10m max_size=500m inactive=60m use_temp_path=off;
 
           server {
               listen 80;
               server_name _;
 
-              # Aplicação Python (RESTRITA AO SEU IP ATUAL + CACHE DE 1m)
               location / {
-                  # Libera apenas o seu IP descoberto dinamicamente
-                  allow {{ meu_ip_cmd.stdout }};
-                  
-                  # Bloqueia todos os outros IPs da internet
-                  deny all;
-
                   proxy_pass http://127.0.0.1:5000;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
@@ -99,7 +83,7 @@
               }
           }
 
-    - name: Reiniciar Nginx para aplicar as regras
+    - name: Reiniciar Nginx
       service:
         name: nginx
         state: restarted
