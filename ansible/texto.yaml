@@ -1,5 +1,5 @@
 ---
-- name: Deploy da Segunda Aplicação (Node.js) com Cache Nginx de 10s
+- name: Deploy da Segunda Aplicação (Node.js) com Restrição de IP Dinâmico
   hosts: ec2
   become: true
 
@@ -22,6 +22,15 @@
           - nginx
         state: present
 
+    # Descobre qual é o IP público da sua máquina local que está rodando o Ansible
+    - name: Obter IP público local
+      delegate_to: localhost
+      become: false
+      uri:
+        url: https://api.ipify.org?format=json
+        return_content: yes
+      register: meu_ip_local
+
     - name: Atualizar repositorio da aplicacao na EC2
       git:
         repo: "{{ repo_url }}"
@@ -30,7 +39,7 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Criar servico systemd para a aplicacao Node.js (Porta 4000)
+    - name: Criar servico systemd para a aplicacao Node.js
       copy:
         dest: /etc/systemd/system/node_app.service
         content: |
@@ -55,7 +64,7 @@
         daemon_reload: yes
         enabled: yes
 
-    - name: Configurar Nginx com Caches das Aplicações
+    - name: Configurar Nginx com Restrição por IP (Libera IP local + Bloqueia outros)
       copy:
         dest: /etc/nginx/sites-available/default
         content: |
@@ -66,7 +75,7 @@
               listen 80;
               server_name _;
 
-              # Rota da Primeira Aplicação (Python/Flask)
+              # Rota 1: Python (Acesso livre público)
               location / {
                   proxy_pass http://127.0.0.1:5000;
                   proxy_set_header Host $host;
@@ -77,8 +86,14 @@
                   add_header X-Cache-Status $upstream_cache_status;
               }
 
-              # Rota da Segunda Aplicação (Node.js - 10 Segundos de Cache)
+              # Rota 2: Node.js (RESTRITO AO SEU IP ATUAL)
               location /node {
+                  # Libera apenas o seu IP descoberto dinamicamente
+                  allow {{ meu_ip_local.json.ip }};
+                  
+                  # Bloqueia qualquer outro IP da internet
+                  deny all;
+
                   proxy_pass http://127.0.0.1:4000/;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
@@ -89,7 +104,7 @@
               }
           }
 
-    - name: Reiniciar Nginx para aplicar as alterações
+    - name: Reiniciar Nginx para aplicar as regras de firewall
       service:
         name: nginx
         state: restarted
