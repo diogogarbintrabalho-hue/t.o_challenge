@@ -13,7 +13,7 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instalar pacotes pré-requisitos do Docker, Git e Nginx
+    - name: Instalar pacotes do Docker, Plugin Compose, Git e Nginx
       apt:
         name:
           - apt-transport-https
@@ -24,7 +24,13 @@
           - git
           - nginx
           - docker.io
-          - docker-compose
+          - docker-compose-v2  # <--- Instala o plugin oficial do 'docker compose' V2
+        state: present
+      ignore_errors: yes
+
+    - name: Garantir fallback do docker-compose legado caso o V2 falhe
+      apt:
+        name: docker-compose
         state: present
 
     - name: Garantir que o serviço Docker está ativo e rodando
@@ -41,14 +47,8 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Subir a stack Docker de Monitoramento (Zabbix + Grafana)
-      community.docker.docker_compose_v2:
-        project_src: "{{ app_dir }}/monitoring"
-        state: present
-      ignore_errors: yes # Fallback caso a coleção v2 não esteja presente
-
-    - name: Subir stack Docker via comando docker-compose (Fallback)
-      command: docker-compose up -d
+    - name: Subir a stack Docker de Monitoramento via comando direto
+      command: docker compose up -d
       args:
         chdir: "{{ app_dir }}/monitoring"
 
