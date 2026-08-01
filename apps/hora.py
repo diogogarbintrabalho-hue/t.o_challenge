@@ -1,5 +1,6 @@
 from flask import Flask, render_template_string
 from datetime import datetime
+from zoneinfo import ZoneInfo  # Módulo nativo do Python para fusos horários
 
 app = Flask(__name__)
 
@@ -21,7 +22,7 @@ HTML_TEMPLATE = """
     <div class="card">
         <h1>🖥️ Servidor Python + Nginx Cache</h1>
         <div class="time">{{ hora }}</div>
-        <p>Data: {{ data }}</p>
+        <p>Data: {{ data }} (GMT-3)</p>
         <div class="note">⚡ Cache configurado no Nginx para 1 minuto (60 segundos).</div>
     </div>
 </body>
@@ -30,7 +31,10 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def home():
-    agora = datetime.now()
+    # Obtém a data/hora atual configurada no fuso horário de São Paulo (GMT-3)
+    fuso_br = ZoneInfo("America/Sao_Paulo")
+    agora = datetime.now(fuso_br)
+    
     return render_template_string(
         HTML_TEMPLATE,
         data=agora.strftime('%d/%m/%Y'),
