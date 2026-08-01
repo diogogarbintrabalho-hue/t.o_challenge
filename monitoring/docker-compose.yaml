@@ -55,14 +55,13 @@ services:
     ports:
       - "10050:10050"
     environment:
-      - ZBX_SERVER_HOST=zabbix-server,172.18.0.0/16,127.0.0.1
+      - ZBX_SERVER_HOST=zabbix-server,127.0.0.1
       - ZBX_HOSTNAME=Zabbix server
     networks:
       - monitoring_net
     depends_on:
       - zabbix-server
     restart: always
-
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
