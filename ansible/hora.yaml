@@ -29,7 +29,7 @@
       become: false
       command: curl -s https://api.ipify.org
       register: meu_ip_cmd
-      changed_when_fale: false
+      changed_when: false
 
     - name: Clonar ou atualizar o repositorio da aplicacao
       git:
