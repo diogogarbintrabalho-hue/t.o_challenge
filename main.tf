@@ -47,6 +47,13 @@ resource "aws_security_group" "web_ansible_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Entrada: Porta 3000 (Grafana) para conexao do DashBoard do grafana
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   # Entrada: Porta 80 (HTTP) para acessar aplicacoes como Nginx
   ingress {
     from_port   = 80
