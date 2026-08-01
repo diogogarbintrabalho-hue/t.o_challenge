@@ -1,0 +1,96 @@
+---
+- name: Deploy da Segunda Aplicação (Node.js) com Cache Nginx de 10s
+  hosts: ec2
+  become: true
+
+  vars:
+    repo_url: "https://https://github.com/diogogarbintrabalho-hue/t.o_challenge.git"
+    app_dir: "/var/www/python_app"
+
+  tasks:
+    - name: Atualizar pacotes do sistema
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar Node.js, npm, Git e Nginx
+      apt:
+        name:
+          - nodejs
+          - npm
+          - git
+          - nginx
+        state: present
+
+    - name: Atualizar repositorio da aplicacao na EC2
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+        accept_hostkey: yes
+
+    - name: Criar servico systemd para a aplicacao Node.js (Porta 4000)
+      copy:
+        dest: /etc/systemd/system/node_app.service
+        content: |
+          [Unit]
+          Description=Node.js Application Server
+          After=network.target
+
+          [Service]
+          User=www-data
+          Group=www-data
+          WorkingDirectory={{ app_dir }}/apps/node_app
+          ExecStart=/usr/bin/node index.js
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Iniciar e habilitar o servico Node.js
+      systemd:
+        name: node_app
+        state: restarted
+        daemon_reload: yes
+        enabled: yes
+
+    - name: Configurar Nginx com Caches das Aplicações
+      copy:
+        dest: /etc/nginx/sites-available/default
+        content: |
+          proxy_cache_path /var/cache/nginx/python levels=1:2 keys_zone=PYTHON_CACHE:10m max_size=500m inactive=60m use_temp_path=off;
+          proxy_cache_path /var/cache/nginx/node levels=1:2 keys_zone=NODE_CACHE:10m max_size=500m inactive=60m use_temp_path=off;
+
+          server {
+              listen 80;
+              server_name _;
+
+              # Rota da Primeira Aplicação (Python/Flask)
+              location / {
+                  proxy_pass http://127.0.0.1:5000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+
+                  proxy_cache PYTHON_CACHE;
+                  proxy_cache_valid 200 1m;
+                  add_header X-Cache-Status $upstream_cache_status;
+              }
+
+              # Rota da Segunda Aplicação (Node.js - 10 Segundos de Cache)
+              location /node {
+                  proxy_pass http://127.0.0.1:4000/;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+
+                  proxy_cache NODE_CACHE;
+                  proxy_cache_valid 200 10s;
+                  add_header X-Cache-Status $upstream_cache_status;
+              }
+          }
+
+    - name: Reiniciar Nginx para aplicar as alterações
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
