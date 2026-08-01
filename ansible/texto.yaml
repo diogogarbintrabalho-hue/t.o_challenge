@@ -4,7 +4,7 @@
   become: true
 
   vars:
-    repo_url: "https://https://github.com/diogogarbintrabalho-hue/t.o_challenge.git"
+    repo_url: "https://github.com/diogogarbintrabalho-hue/t.o_challenge.git"
     app_dir: "/var/www/python_app"
 
   tasks:
