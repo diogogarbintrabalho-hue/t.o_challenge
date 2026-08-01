@@ -26,10 +26,8 @@
     - name: Obter IP público local
       delegate_to: localhost
       become: false
-      uri:
-        url: https://api.ipify.org?format=json
-        return_content: yes
-      register: meu_ip_local
+      command: curl -s https://api.ipify.org
+      register: meu_ip_cmd
 
     - name: Atualizar repositorio da aplicacao na EC2
       git:
@@ -89,7 +87,7 @@
               # Rota 2: Node.js (RESTRITO AO SEU IP ATUAL)
               location /node {
                   # Libera apenas o seu IP descoberto dinamicamente
-                  allow {{ meu_ip_local.json.ip }};
+                  allow {{ meu_ip_cmd.stdout }};
                   
                   # Bloqueia qualquer outro IP da internet
                   deny all;

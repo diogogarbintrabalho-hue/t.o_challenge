@@ -27,10 +27,9 @@
     - name: Obter IP público local
       delegate_to: localhost
       become: false
-      uri:
-        url: https://api.ipify.org?format=json
-        return_content: yes
-      register: meu_ip_local
+      command: curl -s https://api.ipify.org
+      register: meu_ip_cmd
+      changed_when_fale: false
 
     - name: Clonar ou atualizar o repositorio da aplicacao
       git:
@@ -85,7 +84,7 @@
               # Aplicação Python (RESTRITA AO SEU IP ATUAL + CACHE DE 1m)
               location / {
                   # Libera apenas o seu IP descoberto dinamicamente
-                  allow {{ meu_ip_local.json.ip }};
+                  allow {{ meu_ip_cmd.stdout }};
                   
                   # Bloqueia todos os outros IPs da internet
                   deny all;
