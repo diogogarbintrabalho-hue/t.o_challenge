@@ -1,0 +1,102 @@
+---
+- name: Deploy de Monitoramento (Zabbix e Grafana via Docker)
+  hosts: ec2
+  become: true
+
+  vars:
+    repo_url: "https://github.com/diogogarbintrabalho-hue/t.o_challenge.git"
+    app_dir: "/var/www/python_app"
+
+  tasks:
+    - name: Atualizar pacotes do sistema
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar pacotes pré-requisitos do Docker, Git e Nginx
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+          - nginx
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Garantir que o serviço Docker está ativo e rodando
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Atualizar repositorio da aplicacao na EC2
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+        accept_hostkey: yes
+
+    - name: Subir a stack Docker de Monitoramento (Zabbix + Grafana)
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}/monitoring"
+        state: present
+      ignore_errors: yes # Fallback caso a coleção v2 não esteja presente
+
+    - name: Subir stack Docker via comando docker-compose (Fallback)
+      command: docker-compose up -d
+      args:
+        chdir: "{{ app_dir }}/monitoring"
+
+    - name: Configurar Nginx para Reverse Proxy (Aplicações + Zabbix Docker)
+      copy:
+        dest: /etc/nginx/sites-available/default
+        content: |
+          proxy_cache_path /var/cache/nginx/python levels=1:2 keys_zone=PYTHON_CACHE:10m max_size=500m inactive=60m use_temp_path=off;
+          proxy_cache_path /var/cache/nginx/node levels=1:2 keys_zone=NODE_CACHE:10m max_size=500m inactive=60m use_temp_path=off;
+
+          server {
+              listen 80;
+              server_name _;
+
+              # Rota para o Zabbix Web (Container Docker na porta 8080)
+              location /zabbix/ {
+                  proxy_pass http://127.0.0.1:8080/;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+
+              # Rota 1: Python (1m cache)
+              location / {
+                  proxy_pass http://127.0.0.1:5000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+
+                  proxy_cache PYTHON_CACHE;
+                  proxy_cache_valid 200 1m;
+                  add_header X-Cache-Status $upstream_cache_status;
+              }
+
+              # Rota 2: Node.js (10s cache)
+              location /node {
+                  proxy_pass http://127.0.0.1:4000/;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+
+                  proxy_cache NODE_CACHE;
+                  proxy_cache_valid 200 10s;
+                  add_header X-Cache-Status $upstream_cache_status;
+              }
+          }
+
+    - name: Reiniciar Nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes

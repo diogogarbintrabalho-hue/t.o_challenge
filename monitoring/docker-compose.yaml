@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  zabbix-db:
+    image: postgres:15-alpine
+    container_name: zabbix-db
+    restart: always
+    environment:
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password_123
+      POSTGRES_DB: zabbix
+    volumes:
+      - zabbix_db_data:/var/lib/postgresql/data
+    networks:
+      - monitoring_net
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pg:alpine-6.4-latest
+    container_name: zabbix-server
+    restart: always
+    ports:
+      - "10051:10051"
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password_123
+      POSTGRES_DB: zabbix
+    depends_on:
+      - zabbix-db
+    networks:
+      - monitoring_net
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pg:alpine-6.4-latest
+    container_name: zabbix-web
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password_123
+      POSTGRES_DB: zabbix
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: "America/Sao_Paulo"
+    depends_on:
+      - zabbix-db
+      - zabbix-server
+    networks:
+      - monitoring_net
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-6.4-latest
+    container_name: zabbix-agent
+    restart: always
+    privileged: true
+    network_mode: "host"
+    environment:
+      ZBX_SERVER_HOST: "127.0.0.1"
+      ZBX_HOSTNAME: "Zabbix server"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring_net
+
+volumes:
+  zabbix_db_data:
+  grafana_data:
+
+networks:
+  monitoring_net:
+    driver: bridge
