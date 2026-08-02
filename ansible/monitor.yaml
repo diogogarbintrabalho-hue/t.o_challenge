@@ -1,5 +1,5 @@
 ---
-- name: Deploy de Monitoramento (Zabbix e Grafana via Docker)
+- name: Deploy do Monitoramento
   hosts: ec2
   become: true
 
@@ -8,12 +8,12 @@
     app_dir: "/var/www/python_app"
 
   tasks:
-    - name: Atualizar pacotes do sistema
+    - name: Atualizar pacotes
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instalar pacotes do Docker, Plugin Compose, Git e Nginx
+    - name: Instalar pacotes
       apt:
         name:
           - apt-transport-https
@@ -28,18 +28,18 @@
         state: present
       ignore_errors: yes
 
-    - name: Garantir fallback do docker-compose legado caso o V2 falhe
+    - name: tratar erro docker-compose legado
       apt:
         name: docker-compose
         state: present
 
-    - name: Garantir que o serviço Docker está ativo e rodando
+    - name: valida Docker está ativo e rodando
       systemd:
         name: docker
         state: started
         enabled: yes
 
-    - name: Atualizar repositorio da aplicacao na EC2
+    - name: Atualizar repositorio EC2
       git:
         repo: "{{ repo_url }}"
         dest: "{{ app_dir }}"
@@ -47,12 +47,12 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Subir a stack Docker de Monitoramento via comando direto
+    - name: Subir Docker via comando direto
       command: docker compose up -d
       args:
         chdir: "{{ app_dir }}/monitoring"
 
-    - name: Configurar Nginx para Reverse Proxy (Aplicações + Zabbix Docker)
+    - name: Configurar Nginx Aplicações + Zabbix Docker
       copy:
         dest: /etc/nginx/sites-available/default
         content: |

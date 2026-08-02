@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string
 from datetime import datetime
-from zoneinfo import ZoneInfo  # Módulo nativo do Python para fusos horários
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 
@@ -31,7 +31,6 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def home():
-    # Obtém a data/hora atual configurada no fuso horário de São Paulo (GMT-3)
     fuso_br = ZoneInfo("America/Sao_Paulo")
     agora = datetime.now(fuso_br)
     

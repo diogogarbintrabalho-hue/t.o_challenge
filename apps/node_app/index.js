@@ -2,7 +2,6 @@ const http = require('http');
 
 const PORT = 4000;
 
-// Variável para alternar entre os textos
 let alternar = false;
 
 const server = http.createServer((req, res) => {

@@ -1,5 +1,5 @@
 ---
-- name: Deploy da Segunda Aplicação (Node.js) com Cache Nginx de 10s
+- name: Deploy Node.js
   hosts: ec2
   become: true
 
@@ -8,7 +8,7 @@
     app_dir: "/var/www/python_app"
 
   tasks:
-    - name: Atualizar pacotes do sistema
+    - name: Atualizar pacotes
       apt:
         update_cache: yes
         cache_valid_time: 3600
@@ -22,7 +22,7 @@
           - nginx
         state: present
 
-    - name: Atualizar repositorio da aplicacao na EC2
+    - name: Atualizar EC2
       git:
         repo: "{{ repo_url }}"
         dest: "{{ app_dir }}"
@@ -30,7 +30,7 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Criar servico systemd para a aplicacao Node.js (Porta 4000)
+    - name: Criar servico systemd Node.js
       copy:
         dest: /etc/systemd/system/node_app.service
         content: |
@@ -48,14 +48,14 @@
           [Install]
           WantedBy=multi-user.target
 
-    - name: Iniciar e habilitar o servico Node.js
+    - name: Iniciar Node.js
       systemd:
         name: node_app
         state: restarted
         daemon_reload: yes
         enabled: yes
 
-    - name: Configurar Nginx com Caches das Aplicações
+    - name: Nginx com Caches das Aplicações
       copy:
         dest: /etc/nginx/sites-available/default
         content: |

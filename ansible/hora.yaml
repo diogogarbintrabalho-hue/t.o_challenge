@@ -1,5 +1,5 @@
 ---
-- name: Deploy da Primeira Aplicação (Python) com Cache Nginx
+- name: Deploy da Primeira Aplicação (Python)
   hosts: ec2
   become: true
 
@@ -8,12 +8,12 @@
     app_dir: "/var/www/python_app"
 
   tasks:
-    - name: Atualizar pacotes do sistema
+    - name: Atualizar sistema
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instalar dependencias do sistema (Python, Git, Nginx)
+    - name: Instalar dependencias do sistema
       apt:
         name:
           - python3
@@ -31,13 +31,13 @@
         force: yes
         accept_hostkey: yes
 
-    - name: Criar ambiente virtual Python (venv) e instalar requisitos
+    - name: Criar ambiente virtual Python
       pip:
         requirements: "{{ app_dir }}/apps/requirements.txt"
         virtualenv: "{{ app_dir }}/venv"
         virtualenv_command: python3 -m venv
 
-    - name: Criar servico systemd para a aplicacao Flask (Python)
+    - name: Criar servico systemd
       copy:
         dest: /etc/systemd/system/python_app.service
         content: |
@@ -55,14 +55,14 @@
           [Install]
           WantedBy=multi-user.target
 
-    - name: Iniciar e habilitar o servico Python
+    - name: Iniciar o servico
       systemd:
         name: python_app
         state: restarted
         daemon_reload: yes
         enabled: yes
 
-    - name: Configurar Nginx com Cache de 1m na Aplicação Python
+    - name: Nginx com Cache na Aplicação Python
       copy:
         dest: /etc/nginx/sites-available/default
         content: |
