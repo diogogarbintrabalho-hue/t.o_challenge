@@ -3,9 +3,9 @@
 O objetivo desse repositório é armazenar os aquivos de provisionamento de infraestrutura como código (IaC) e de desenvilvimento de duas aplicações web simples.
 
 Tarefas
- 1. Criar duas aplicações
-   1.1	Utilize linguagens diferentes.
-   1.2 Cada aplicação deve ter duas rotas: Uma retornando um texto fixo. Outra retornando o horário atual do servidor.
+ 1. Criar duas aplicações  
+   1.1	Utilize linguagens diferentes.  
+   1.2 Cada aplicação deve ter duas rotas: Uma retornando um texto fixo. Outra retornando o horário atual do servidor.  
 
 __Foram criadas duas aplicações:__  
 
