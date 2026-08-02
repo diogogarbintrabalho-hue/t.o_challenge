@@ -117,12 +117,17 @@ __Ao acessar a primeira aplicação é apresentado a data e horário atual do se
 
     
 
- 5. Desenhar e analisar a infraestrutura
-   5.1 Criar um diagrama representando a arquitetura.
+ 5. Desenhar e analisar a infraestrutura  
+   5.1 Criar um diagrama representando a arquitetura.  
    
- 6. Identificar e sugerir pontos de melhoria.
+ 6. Identificar e sugerir pontos de melhoria.  
+    __* Implementação de VPC__  
+    __* Deploy utilizando ferramentas de pipeline como Jenkis, GitOps, ArgoCD e etc__  
+    __* Configuração de HTTPS e bloqueio ao tráfego HTTP__  
+    __* Configurar triggers para escalabilidade baseado em acessos.__  
+       
    
- 7. Atualizações  
+ 8. Atualizações  
    7.1 No desenho mostre como seriam fluxo de atualização de cada componente da infra e do código.  
    7.2 Identificar e sugerir pontos de melhoria.  
 
