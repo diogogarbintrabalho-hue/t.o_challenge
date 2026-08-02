@@ -118,9 +118,12 @@ __Ao acessar a primeira aplicação é apresentado a data e horário atual do se
     
 
  5. Desenhar e analisar a infraestrutura  
-   5.1 Criar um diagrama representando a arquitetura.  
+   5.1 Criar um diagrama representando a arquitetura.
+
+    <img width="789" height="807" alt="image" src="https://github.com/user-attachments/assets/8d7cbc1c-0f53-43e6-b52c-59e5e3c342b8" />
+
    
- 6. Identificar e sugerir pontos de melhoria.  
+ 7. Identificar e sugerir pontos de melhoria.  
     __* Implementação de VPC__  
     __* Deploy utilizando ferramentas de pipeline como Jenkis, GitOps, ArgoCD e etc__  
     __* Configuração de HTTPS e bloqueio ao tráfego HTTP__  
