@@ -130,7 +130,7 @@ __Ao acessar a primeira aplicação é apresentado a data e horário atual do se
  8. Atualizações  
    7.1 No desenho mostre como seriam fluxo de atualização de cada componente da infra e do código.  
    7.2 Identificar e sugerir pontos de melhoria.  
-    __* As atualizações pertinentes a infraestrutura são realizadas através do Terraform. Para uma gestão centralizada manter o arquivo tfstate no git, compartilhado com os responsáveis pela infraestrutura torna-se uma boa prática. Obviamente quando temos um repositório privado.__
+    __* As atualizações pertinentes a infraestrutura são realizadas através do Terraform. Para uma gestão centralizada manter o arquivo tfstate no git, compartilhado com os responsáveis pela infraestrutura torna-se uma boa prática. Obviamente quando temos um repositório privado.__  
     __* Quando tratamos de deploy, o ansible é um facilitador. Embora, em produção é imprescindível a utilização de uma ferramenta de CI/CD.__
     
 
